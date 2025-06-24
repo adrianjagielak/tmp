@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF.js Viewer Demo</title>
+  <style>
+    #pdfViewer {
+      border: 1px solid #ccc;
+      margin: 20px auto;
+      display: block;
+    }
+    .controls {
+      text-align: center;
+      margin: 20px;
+    }
+    button {
+      font-size: 16px;
+      padding: 10px 20px;
+      margin: 0 10px;
+    }
+    .status {
+      text-align: center;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="pdfViewer"></canvas>
+
+  <div class="controls">
+    <button id="prevPage">Previous Page</button>
+    <button id="nextPage">Next Page</button>
+  </div>
+
+  <div class="status">
+    Page: <span id="currentPage">1</span> /
+    <span id="totalPages">?</span>
+  </div>
+
+  <!-- Import PDF.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.3.31/pdf.min.mjs"></script>
+  <script>
+    const url = 'multipage.pdf';
+
+    let pdfDoc = null,
+        pageNum = 1,
+        pageRendering = false,
+        pageNumPending = null,
+        scale = 1.5,
+        canvas = document.getElementById('pdfViewer'),
+        ctx = canvas.getContext('2d');
+
+    /**
+     * Render the page.
+     */
+    function renderPage(num) {
+      pageRendering = true;
+      pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({ scale: scale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        const renderTask = page.render(renderContext);
+
+        renderTask.promise.then(function() {
+          pageRendering = false;
+
+          document.getElementById('currentPage').textContent = pageNum;
+
+          if (pageNumPending !== null) {
+            renderPage(pageNumPending);
+            pageNumPending = null;
+          }
+        });
+      });
+    }
+
+    /**
+     * If another page rendering in progress, waits.
+     */
+    function queueRenderPage(num) {
+      if (pageRendering) {
+        pageNumPending = num;
+      } else {
+        renderPage(num);
+      }
+    }
+
+    /**
+     * Previous page
+     */
+    document.getElementById('prevPage').addEventListener('click', function() {
+      if (pageNum <= 1) {
+        return;
+      }
+      pageNum--;
+      queueRenderPage(pageNum);
+    });
+
+    /**
+     * Next page
+     */
+    document.getElementById('nextPage').addEventListener('click', function() {
+      if (pageNum >= pdfDoc.numPages) {
+        return;
+      }
+      pageNum++;
+      queueRenderPage(pageNum);
+    });
+
+    /**
+     * Asynchronously downloads PDF.
+     */
+    pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+      pdfDoc = pdfDoc_;
+      document.getElementById('totalPages').textContent = pdfDoc.numPages;
+
+      renderPage(pageNum);
+    }).catch(function(error) {
+      console.error('Error loading PDF: ' + error);
+    });
+  </script>
+
+</body>
+</html>
