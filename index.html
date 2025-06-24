@@ -39,10 +39,10 @@
   </div>
 
   <!-- PDF.js legacy build -->
-  <script src="https://github.com/mozilla/pdfjs-dist/raw/refs/heads/master/legacy/build/pdf.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 
-      'https://github.com/mozilla/pdfjs-dist/raw/refs/heads/master/legacy/build/pdf.worker.js';
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.2.146/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.2.146/pdf.worker.min.js";
 
     const url = 'multipage.pdf';
 
