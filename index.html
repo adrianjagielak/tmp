@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>PDF.js Viewer Demo</title>
+  <meta charset="UTF-8" />
+  <title>PDF.js Legacy Demo</title>
   <style>
     #pdfViewer {
       border: 1px solid #ccc;
@@ -38,10 +38,12 @@
     <span id="totalPages">?</span>
   </div>
 
-  <!-- Import PDF.js from CDN -->
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/wasm/openjpeg_nowasm_fallback.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/web/pdf_viewer.min.css" rel="stylesheet">
+  <!-- PDF.js legacy build -->
+  <script src="https://github.com/mozilla/pdfjs-dist/raw/refs/heads/master/legacy/build/pdf.js"></script>
   <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 
+      'https://github.com/mozilla/pdfjs-dist/raw/refs/heads/master/legacy/build/pdf.worker.js';
+
     const url = 'multipage.pdf';
 
     let pdfDoc = null,
@@ -52,9 +54,6 @@
         canvas = document.getElementById('pdfViewer'),
         ctx = canvas.getContext('2d');
 
-    /**
-     * Render the page.
-     */
     function renderPage(num) {
       pageRendering = true;
       pdfDoc.getPage(num).then(function(page) {
@@ -81,9 +80,6 @@
       });
     }
 
-    /**
-     * If another page rendering in progress, waits.
-     */
     function queueRenderPage(num) {
       if (pageRendering) {
         pageNumPending = num;
@@ -92,9 +88,6 @@
       }
     }
 
-    /**
-     * Previous page
-     */
     document.getElementById('prevPage').addEventListener('click', function() {
       if (pageNum <= 1) {
         return;
@@ -103,9 +96,6 @@
       queueRenderPage(pageNum);
     });
 
-    /**
-     * Next page
-     */
     document.getElementById('nextPage').addEventListener('click', function() {
       if (pageNum >= pdfDoc.numPages) {
         return;
@@ -114,16 +104,13 @@
       queueRenderPage(pageNum);
     });
 
-    /**
-     * Asynchronously downloads PDF.
-     */
     pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
       pdfDoc = pdfDoc_;
       document.getElementById('totalPages').textContent = pdfDoc.numPages;
 
       renderPage(pageNum);
     }).catch(function(error) {
-      console.error('Error loading PDF: ' + error);
+      console.error('Błąd ładowania PDF:', error);
     });
   </script>
 
