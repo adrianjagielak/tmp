@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PDF.js Viewer Demo</title>
+  <meta charset="UTF-8" />
+  <title>PDF Viewer with Page Navigation</title>
   <style>
-    #pdfViewer {
+    iframe {
+      width: 80%;
+      height: 600px;
       border: 1px solid #ccc;
-      margin: 20px auto;
       display: block;
+      margin: 20px auto;
     }
     .controls {
       text-align: center;
@@ -18,112 +20,55 @@
       padding: 10px 20px;
       margin: 0 10px;
     }
-    .status {
+    #urlDisplay {
       text-align: center;
       font-family: monospace;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <canvas id="pdfViewer"></canvas>
+  <iframe id="pdfFrame" src="file:///Users/adrianjagielak/Downloads/multipage.pdf#page=1"></iframe>
 
   <div class="controls">
     <button id="prevPage">Previous Page</button>
     <button id="nextPage">Next Page</button>
+    <div id="urlDisplay"></div>
   </div>
 
-  <div class="status">
-    Page: <span id="currentPage">1</span> /
-    <span id="totalPages">?</span>
-  </div>
-
-  <!-- Import PDF.js from CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.3.31/pdf.min.mjs"></script>
   <script>
-    const url = 'multipage.pdf';
+    let currentPage = 1;
+    const pdfUrl = 'multipage.pdf';
+    const pdfFrame = document.getElementById('pdfFrame');
+    const prevButton = document.getElementById('prevPage');
+    const nextButton = document.getElementById('nextPage');
+    const urlDisplay = document.getElementById('urlDisplay');
 
-    let pdfDoc = null,
-        pageNum = 1,
-        pageRendering = false,
-        pageNumPending = null,
-        scale = 1.5,
-        canvas = document.getElementById('pdfViewer'),
-        ctx = canvas.getContext('2d');
+    function updateIframe() {
+      const newUrl = `${pdfUrl}#page=${currentPage}`;
+      pdfFrame.src = newUrl;
+      urlDisplay.textContent = newUrl;
 
-    /**
-     * Render the page.
-     */
-    function renderPage(num) {
-      pageRendering = true;
-      pdfDoc.getPage(num).then(function(page) {
-        const viewport = page.getViewport({ scale: scale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
 
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: viewport
-        };
-        const renderTask = page.render(renderContext);
 
-        renderTask.promise.then(function() {
-          pageRendering = false;
-
-          document.getElementById('currentPage').textContent = pageNum;
-
-          if (pageNumPending !== null) {
-            renderPage(pageNumPending);
-            pageNumPending = null;
-          }
-        });
-      });
+pdfFrame.contentWindow.location.reload(true);
     }
 
-    /**
-     * If another page rendering in progress, waits.
-     */
-    function queueRenderPage(num) {
-      if (pageRendering) {
-        pageNumPending = num;
-      } else {
-        renderPage(num);
+    prevButton.onclick = function() {
+      if (currentPage > 1) {
+        currentPage--;
+        updateIframe();
       }
-    }
+    };
 
-    /**
-     * Previous page
-     */
-    document.getElementById('prevPage').addEventListener('click', function() {
-      if (pageNum <= 1) {
-        return;
-      }
-      pageNum--;
-      queueRenderPage(pageNum);
-    });
+    nextButton.onclick = function() {
+      currentPage++;
+      updateIframe();
+    };
 
-    /**
-     * Next page
-     */
-    document.getElementById('nextPage').addEventListener('click', function() {
-      if (pageNum >= pdfDoc.numPages) {
-        return;
-      }
-      pageNum++;
-      queueRenderPage(pageNum);
-    });
-
-    /**
-     * Asynchronously downloads PDF.
-     */
-    pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
-      pdfDoc = pdfDoc_;
-      document.getElementById('totalPages').textContent = pdfDoc.numPages;
-
-      renderPage(pageNum);
-    }).catch(function(error) {
-      console.error('Error loading PDF: ' + error);
-    });
+    // Initialize URL display
+    urlDisplay.textContent = `${pdfUrl}#page=${currentPage}`;
   </script>
 
 </body>
